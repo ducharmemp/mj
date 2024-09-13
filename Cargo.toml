@@ -5,4 +5,9 @@ edition = "2021"
 license = "LGPL-3.0"
 
 [dependencies]
-actix = "0.13"
+ractor = "0.10"
+reqwest = { version = "0.12", features = ["default", "json", "gzip", "brotli"] }
+html5ever = "0.27"
+clap = { version = "4.5.17", features = ["derive"] }
+tokio = { version = "1.40.0", features = ["full"] }
+markup5ever = "0.13.0"

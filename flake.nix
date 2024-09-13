@@ -12,12 +12,17 @@
           inherit system overlays;
         };
         toolchain = fenix.packages."${system}".complete;
+        buildPackages = with pkgs; [
+          pkg-config
+          openssl
+        ];
       in
       with pkgs;
       {
         formatter = pkgs.nixpkgs-fmt;
         devShells.default = mkShell {
-          buildInputs = with toolchain; [ (withComponents [ "cargo" "clippy" "rust-src" "rustc" "rustfmt" ]) rust-analyzer-nightly ];
+          buildInputs = with toolchain; [ (withComponents [ "cargo" "clippy" "rust-src" "rustc" "rustfmt" ]) statix rust-analyzer-nightly ] ++ buildPackages;
+          LD_LIBRARY_PATH = lib.makeLibraryPath buildPackages;
           RUST_BACKTRACE = 1;
         };
       });
