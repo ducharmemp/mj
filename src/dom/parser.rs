@@ -18,17 +18,16 @@ pub struct DomElementHandle {
     pub name: Option<QualName>,
 }
 
-#[derive(Default)]
 pub(super) struct DomSink {
     line_no: u64,
     dom_layout: DomTree,
 }
 
 impl DomSink {
-    fn new() -> Self {
+    pub fn new() -> Self {
         let mut sink = Self {
             line_no: 1,
-            ..Default::default()
+            dom_layout: DomTree::default(),
         };
 
         sink.dom_layout.add_node(MemberKind::Root);
@@ -176,6 +175,6 @@ impl TreeSink for DomSink {
     }
 
     fn set_current_line(&mut self, line_number: u64) {
-        println!("Set current line to {}", line_number);
+        self.line_no = line_number;
     }
 }

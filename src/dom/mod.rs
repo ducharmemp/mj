@@ -2,6 +2,7 @@ use std::io::BufReader;
 
 use html5ever::{parse_document, tendril::TendrilSink};
 use ractor::{async_trait, Actor, ActorProcessingErr, ActorRef};
+use tracing::{event, instrument, Level};
 
 use parser::DomSink;
 
@@ -27,6 +28,8 @@ impl Actor for MjDom {
     ) -> Result<Self::State, ActorProcessingErr> {
         Ok(())
     }
+
+    #[instrument(skip(self, myself, message, state))]
     async fn handle(
         &self,
         myself: ActorRef<Self::Msg>,
@@ -35,12 +38,16 @@ impl Actor for MjDom {
     ) -> Result<(), ActorProcessingErr> {
         match message {
             MjDomMessage::Parse(content) => {
-                parse_document(DomSink::default(), Default::default())
+                event!(Level::DEBUG, "Parsing document content");
+                let document = parse_document(DomSink::new(), Default::default())
                     .from_utf8()
                     .read_from(&mut BufReader::new(content.as_bytes()))
                     .unwrap();
+                event!(Level::DEBUG, "Parsed document content");
+                dbg!(document);
             }
         }
+        dbg!("Done");
         Ok(())
     }
 }
