@@ -15,6 +15,23 @@
         buildPackages = with pkgs; [
           pkg-config
           openssl
+          expat
+          fontconfig
+          freetype
+          freetype.dev
+          libGL
+          xorg.libX11
+          xorg.libXcursor
+          xorg.libXi
+          xorg.libXrandr
+          wayland
+          libxkbcommon
+          cairo
+          pango
+          gdk-pixbuf
+          atk
+          gtk3
+          glib
         ];
       in
       with pkgs;

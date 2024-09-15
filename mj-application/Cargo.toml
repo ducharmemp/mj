@@ -1,0 +1,12 @@
+[package]
+name = "mj-application"
+version = "0.1.0"
+edition = "2021"
+license = "LGPL-3.0"
+
+[dependencies]
+mj-core = { version = "0.1.0", path = "../mj-core" }
+iced.workspace = true
+iced.features = ['highlighter', 'tokio', 'debug']
+tokio.workspace = true
+rfd = "0.13"

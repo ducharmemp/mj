@@ -8,9 +8,6 @@ use ractor::Actor;
 use tracing_subscriber::EnvFilter;
 use url::Url;
 
-#[macro_use]
-extern crate html5ever;
-
 mod browser;
 mod cli;
 mod dom;

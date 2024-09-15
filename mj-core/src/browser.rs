@@ -33,7 +33,7 @@ impl Actor for MjBrowser {
                 Url::parse("file:///home/matt/code/mj/resources/views/new.html")
                     .expect("Could not parse file path"),
             ),),
-            myself.into(),
+            myself.clone().into(),
         )
         .await?;
         event!(Level::DEBUG, "Spawned new default webview");
