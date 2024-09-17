@@ -53,6 +53,9 @@ impl DomTree {
     }
 
     pub fn prepend_to(&mut self, parent: NodeId, child: NodeId) {
+        dbg!(&self.entries);
+        dbg!(parent);
+        dbg!(child);
         let [parent_entry, child_entry] = self
             .entries
             .get_many_mut([&parent, &child])
@@ -63,6 +66,9 @@ impl DomTree {
     }
 
     pub fn append_to(&mut self, parent: NodeId, child: NodeId) {
+        dbg!(&self.entries);
+        dbg!(parent);
+        dbg!(child);
         let [parent_entry, child_entry] = self
             .entries
             .get_many_mut([&parent, &child])

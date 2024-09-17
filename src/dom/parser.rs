@@ -21,17 +21,18 @@ pub struct DomElementHandle {
 pub(super) struct DomSink {
     line_no: u64,
     dom_layout: DomTree,
+    root_id: u64,
 }
 
 impl DomSink {
     pub fn new() -> Self {
-        let mut sink = Self {
+        let mut dom_layout = DomTree::default();
+        let root_id = dom_layout.add_node(MemberKind::Root);
+        Self {
             line_no: 1,
-            dom_layout: DomTree::default(),
-        };
-
-        sink.dom_layout.add_node(MemberKind::Root);
-        sink
+            dom_layout,
+            root_id,
+        }
     }
 }
 
@@ -48,7 +49,10 @@ impl TreeSink for DomSink {
     }
 
     fn get_document(&mut self) -> Self::Handle {
-        Self::Handle { id: 0, name: None }
+        Self::Handle {
+            id: self.root_id,
+            name: None,
+        }
     }
 
     fn get_template_contents(&mut self, target: &Self::Handle) -> Self::Handle {
