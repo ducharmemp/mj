@@ -1,13 +1,21 @@
-use ractor::{async_trait, call, cast, registry, Actor, ActorProcessingErr, ActorRef};
+use ractor::{
+    async_trait, call, forward,
+    registry::{self, where_is},
+    Actor, ActorProcessingErr, ActorRef, RpcReplyPort,
+};
 use tracing::{event, instrument, Level};
 use url::Url;
 
 use crate::{
     dom::{MjDom, MjDomMessage},
     protocol::{handler::MjProtocolHandlerMessage, MjProtocolMessage},
+    renderer::MjRendererMessage,
 };
 
-pub enum MjWebViewMessage {}
+pub enum MjWebViewMessage {
+    PrintDom(RpcReplyPort<String>),
+    DomUpdated,
+}
 pub type MjWebViewArgs = (Url,);
 
 pub struct MjWebview;
@@ -30,8 +38,8 @@ impl Actor for MjWebview {
         args: MjWebViewArgs,
     ) -> Result<Self::State, ActorProcessingErr> {
         event!(Level::INFO, "Starting new webview");
-        event!(Level::DEBUG, "Spawning new DOM");
-        let (dom, _) = Actor::spawn_linked(None, MjDom, (), myself.into()).await?;
+        let (dom, _) =
+            Actor::spawn_linked(None, MjDom, myself.clone(), myself.clone().into()).await?;
         Ok(MjWebviewState { dom, url: args.0 })
     }
 
@@ -47,11 +55,15 @@ impl Actor for MjWebview {
                 .expect("Failed to find protocol handler")
                 .into();
         let handle = call!(handler, MjProtocolHandlerMessage::Fetch, state.url.clone())?;
-        let response = call!(handle, MjProtocolMessage::Read)?;
-
         event!(Level::INFO, "Fetched content");
         event!(Level::DEBUG, "Sending message to DOM to parse content");
-        cast!(state.dom, MjDomMessage::Parse(Box::new(response)))?;
+        let dom_handle = state.dom.clone();
+        forward!(
+            handle,
+            MjProtocolMessage::Read,
+            dom_handle,
+            MjDomMessage::ParseDocument
+        )?;
         Ok(())
     }
 
@@ -61,6 +73,21 @@ impl Actor for MjWebview {
         message: Self::Msg,
         state: &mut Self::State,
     ) -> Result<(), ActorProcessingErr> {
+        match message {
+            MjWebViewMessage::PrintDom(reply) => {}
+            MjWebViewMessage::DomUpdated => {
+                let dom = state.dom.clone();
+                let renderer = where_is("mj:renderer".to_string())
+                    .expect("Could not find renderer")
+                    .into();
+                forward!(
+                    dom,
+                    MjDomMessage::IntoLayout,
+                    renderer,
+                    MjRendererMessage::RenderLayout
+                )?;
+            }
+        };
         Ok(())
     }
 }

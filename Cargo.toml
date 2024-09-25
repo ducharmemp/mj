@@ -12,9 +12,13 @@ clap = { version = "4.5.17", features = ["derive"] }
 tokio = { version = "1.40.0", features = ["full"] }
 tokio-util = "0.7"
 markup5ever = "0.13.0"
-hashbrown = "0.14.5"
+slotmap = "1.0.7"
 url = "2.5"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["std", "env-filter"] }
 futures = "0.3"
-iced = { git = "https://github.com/iced-rs/iced.git", rev = "8fb939b5a920e0cd836dbdd24c948f8f2512fc7e", features = ["default", "canvas", "tokio", "highlighter"] }
+# iced = { git = "https://github.com/iced-rs/iced.git", rev = "8fb939b5a920e0cd836dbdd24c948f8f2512fc7e", features = ["default", "canvas", "tokio", "highlighter"] }
+vello = "0.2.1"
+winit = "0.30.5"
+taffy = "0.5.2"
+cssparser = "0.34.0"

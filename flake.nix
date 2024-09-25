@@ -32,6 +32,10 @@
           atk
           gtk3
           glib
+vulkan-headers
+vulkan-loader
+vulkan-validation-layers
+vulkan-tools
         ];
       in
       with pkgs;

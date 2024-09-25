@@ -5,6 +5,6 @@ pub mod handler;
 mod http;
 
 pub enum MjProtocolMessage {
-    Read(RpcReplyPort<String>),
+    Read(RpcReplyPort<Box<String>>),
     Write,
 }

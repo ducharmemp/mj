@@ -39,7 +39,7 @@ impl Actor for MjFileProtocolHandler {
             MjProtocolMessage::Read(reply) => {
                 let mut buf = String::new();
                 state.file.read_to_string(&mut buf).await;
-                reply.send(buf)?;
+                reply.send(Box::new(buf))?;
                 myself.stop(None);
             }
             MjProtocolMessage::Write => todo!(),

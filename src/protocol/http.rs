@@ -44,7 +44,7 @@ impl Actor for MjHttpProtocolHandler {
             MjProtocolMessage::Read(reply) => {
                 let response = state.response.take().expect("Expected response");
                 let response_body = response.text().await?;
-                reply.send(response_body)?;
+                reply.send(Box::new(response_body))?;
                 myself.stop(None);
             }
             MjProtocolMessage::Write => todo!(),

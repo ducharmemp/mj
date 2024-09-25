@@ -21,13 +21,12 @@ pub struct DomElementHandle {
 pub(super) struct DomSink {
     line_no: u64,
     dom_layout: DomTree,
-    root_id: u64,
+    root_id: NodeId,
 }
 
 impl DomSink {
     pub fn new() -> Self {
-        let mut dom_layout = DomTree::default();
-        let root_id = dom_layout.add_node(MemberKind::Root);
+        let (dom_layout, root_id) = DomTree::new();
         Self {
             line_no: 1,
             dom_layout,
