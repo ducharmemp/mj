@@ -1,10 +1,7 @@
 use std::path::PathBuf;
 
-use ractor::{async_trait, Actor, ActorProcessingErr, ActorRef};
 use tokio::{fs::File, io::AsyncReadExt};
 use tracing::{event, instrument, Level};
-
-use super::MjProtocolMessage;
 
 pub struct MjFileProtocolHandler;
 
@@ -12,12 +9,7 @@ pub struct MjFileProtocolHandlerState {
     file: File,
 }
 
-#[async_trait]
-impl Actor for MjFileProtocolHandler {
-    type Msg = MjProtocolMessage;
-    type State = MjFileProtocolHandlerState;
-    type Arguments = PathBuf;
-
+impl MjFileProtocolHandler {
     #[instrument(skip(self))]
     async fn pre_start(
         &self,
