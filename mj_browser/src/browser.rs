@@ -1,8 +1,10 @@
 use std::{error::Error, num::NonZeroUsize, sync::Arc, time::Instant};
 
-use stakker::{actor, ret_shutdown, ActorOwn, Stakker};
+use stakker::{actor, query, ret_shutdown, ActorOwn, Stakker};
+use taffy::{AvailableSpace, TaffyTree};
 use url::Url;
 use vello::{
+    kurbo::{Affine, RoundedRect, Stroke},
     peniko::Color,
     util::{RenderContext, RenderSurface},
     wgpu, AaConfig, Renderer, RendererOptions, Scene,
@@ -35,6 +37,7 @@ pub struct MjBrowser<'b> {
     render_context: RenderContext,
     renderers: Vec<Option<Renderer>>,
     render_state: RenderState<'b>,
+    scene: Scene,
 }
 
 impl<'b> MjBrowser<'b> {
@@ -53,6 +56,7 @@ impl<'b> MjBrowser<'b> {
             render_context: RenderContext::new(),
             renderers: vec![],
             render_state: RenderState::Suspended(None),
+            scene: Scene::new(),
         })
     }
 }
@@ -139,11 +143,44 @@ impl<'b> ApplicationHandler for MjBrowser<'b> {
             // This is where all the rendering happens
             WindowEvent::RedrawRequested => {
                 // Get the RenderSurface (surface + config)
+                dbg!("Redrawing");
+                self.scene.reset();
                 let surface = &render_state.surface;
 
                 // Get the window size
                 let width = surface.config.width;
                 let height = surface.config.height;
+                let (root_id, mut taffy) =
+                    query!([self.webview, &mut self.stakker], compute_layout())
+                        .expect("Could not resolve DOM layout");
+
+                taffy
+                    .compute_layout(
+                        root_id,
+                        taffy::Size {
+                            width: AvailableSpace::Definite(width as f32),
+                            height: AvailableSpace::Definite(height as f32),
+                        },
+                    )
+                    .expect("Could not compute layout");
+                fn walk(scene: &mut Scene, taffy: &TaffyTree, node: taffy::NodeId) {
+                    let layout = taffy.layout(node).unwrap();
+                    let stroke = Stroke::new(6.0);
+                    let rect = RoundedRect::new(
+                        layout.location.x.into(),
+                        layout.location.y.into(),
+                        layout.size.width.into(),
+                        layout.size.height.into(),
+                        0.0,
+                    );
+                    let rect_stroke_color = Color::rgb(0.9804, 0.702, 0.5294);
+                    scene.stroke(&stroke, Affine::IDENTITY, rect_stroke_color, None, &rect);
+                    for child in taffy.children(node).unwrap() {
+                        walk(scene, taffy, child);
+                    }
+                }
+
+                walk(&mut self.scene, &taffy, root_id);
 
                 // Get a handle to the device
                 let device_handle = &self.render_context.devices[surface.dev_id];
@@ -161,7 +198,7 @@ impl<'b> ApplicationHandler for MjBrowser<'b> {
                     .render_to_surface(
                         &device_handle.device,
                         &device_handle.queue,
-                        &Scene::new(),
+                        &self.scene,
                         &surface_texture,
                         &vello::RenderParams {
                             base_color: Color::BLACK, // Background color

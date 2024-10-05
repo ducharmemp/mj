@@ -1,0 +1,20 @@
+[package]
+name = "mj_browser"
+version = "0.1.0"
+edition = "2021"
+license = "LGPL-3.0"
+
+[dependencies]
+html5ever = { workspace = true } 
+clap = { workspace = true } 
+slotmap = { workspace = true } 
+url = { workspace = true } 
+tracing = { workspace = true } 
+tracing-subscriber = { workspace = true } 
+vello = { workspace = true } 
+winit ={ workspace = true } 
+taffy = { workspace = true } 
+stakker = { workspace = true } 
+pollster = { workspace = true } 
+mj_dom = { path = "../mj_dom" }
+parley = "0.1.0"

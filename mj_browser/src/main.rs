@@ -4,10 +4,8 @@ use browser::MjBrowser;
 use tracing_subscriber::EnvFilter;
 use winit::event_loop::EventLoop;
 
-
 mod browser;
 mod cli;
-mod dom;
 mod protocol;
 mod webview;
 
