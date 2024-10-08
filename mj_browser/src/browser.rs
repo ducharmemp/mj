@@ -46,7 +46,8 @@ impl<'b> MjBrowser<'b> {
         let webview = actor!(
             stakker,
             MjWebview::init(
-                Url::parse("file:///home/matt/code/mj/resources/views/new.html").unwrap()
+                Url::parse("https://demo.borland.com/testsite/stadyn_largepagewithimages.html")
+                    .unwrap()
             ),
             ret_shutdown!(stakker)
         );
@@ -150,37 +151,11 @@ impl<'b> ApplicationHandler for MjBrowser<'b> {
                 // Get the window size
                 let width = surface.config.width;
                 let height = surface.config.height;
-                let (root_id, mut taffy) =
-                    query!([self.webview, &mut self.stakker], compute_layout())
-                        .expect("Could not resolve DOM layout");
+                let mut layout = query!([self.webview, &mut self.stakker], compute_layout())
+                    .expect("Could not resolve DOM layout");
 
-                taffy
-                    .compute_layout(
-                        root_id,
-                        taffy::Size {
-                            width: AvailableSpace::Definite(width as f32),
-                            height: AvailableSpace::Definite(height as f32),
-                        },
-                    )
-                    .expect("Could not compute layout");
-                fn walk(scene: &mut Scene, taffy: &TaffyTree, node: taffy::NodeId) {
-                    let layout = taffy.layout(node).unwrap();
-                    let stroke = Stroke::new(6.0);
-                    let rect = RoundedRect::new(
-                        layout.location.x.into(),
-                        layout.location.y.into(),
-                        layout.size.width.into(),
-                        layout.size.height.into(),
-                        0.0,
-                    );
-                    let rect_stroke_color = Color::rgb(0.9804, 0.702, 0.5294);
-                    scene.stroke(&stroke, Affine::IDENTITY, rect_stroke_color, None, &rect);
-                    for child in taffy.children(node).unwrap() {
-                        walk(scene, taffy, child);
-                    }
-                }
-
-                walk(&mut self.scene, &taffy, root_id);
+                layout.set_content_area(width as f32, height as f32);
+                layout.draw(&mut self.scene);
 
                 // Get a handle to the device
                 let device_handle = &self.render_context.devices[surface.dev_id];

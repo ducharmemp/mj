@@ -18,3 +18,4 @@ stakker = { workspace = true }
 pollster = { workspace = true } 
 mj_dom = { path = "../mj_dom" }
 parley = "0.1.0"
+ureq = "2.10.1"

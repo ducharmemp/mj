@@ -1,54 +1,25 @@
-use ractor::{async_trait, Actor, ActorProcessingErr, ActorRef};
-use reqwest::Response;
-use tokio::{io::AsyncReadExt, sync::OnceCell};
+use std::{fs::File, io::Read};
+
+use stakker::{ret, stop, Ret, CX};
 use tracing::{event, instrument, Level};
 use url::Url;
 
-use super::MjProtocolMessage;
+pub struct MjHttpHandler;
 
-pub struct MjHttpProtocolHandler;
-
-pub struct MjHttpProtocolHandlerState {
-    response: OnceCell<Response>,
-}
-
-#[async_trait]
-impl Actor for MjHttpProtocolHandler {
-    type Msg = MjProtocolMessage;
-    type State = MjHttpProtocolHandlerState;
-    type Arguments = Url;
-
-    #[instrument(skip(self))]
-    async fn pre_start(
-        &self,
-        myself: ActorRef<Self::Msg>,
-        args: Self::Arguments,
-    ) -> Result<Self::State, ActorProcessingErr> {
-        event!(Level::INFO, "Starting http protocol handler");
-        let response = reqwest::get(args).await?;
-        let container = OnceCell::new();
-        container.set(response);
-
-        Ok(MjHttpProtocolHandlerState {
-            response: container,
-        })
+impl MjHttpHandler {
+    #[instrument(skip(cx))]
+    pub fn init(cx: CX![]) -> Option<Self> {
+        event!(Level::INFO, "Starting protocol handler");
+        Some(Self {})
     }
 
-    async fn handle(
-        &self,
-        myself: ActorRef<Self::Msg>,
-        message: Self::Msg,
-        state: &mut Self::State,
-    ) -> Result<(), ActorProcessingErr> {
-        match message {
-            MjProtocolMessage::Read(reply) => {
-                let response = state.response.take().expect("Expected response");
-                let response_body = response.text().await?;
-                reply.send(Box::new(response_body))?;
-                myself.stop(None);
-            }
-            MjProtocolMessage::Write => todo!(),
-        }
-        Ok(())
+    pub fn fetch(&mut self, cx: CX![], url: Url, ret: Ret<String>) {
+        let buf = ureq::get(&url.to_string())
+            .call()
+            .unwrap()
+            .into_string()
+            .unwrap();
+        ret!([ret], buf);
+        stop!(cx);
     }
 }

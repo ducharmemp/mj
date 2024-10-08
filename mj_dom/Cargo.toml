@@ -9,3 +9,4 @@ stakker = { workspace = true }
 taffy = { workspace = true }
 tracing = { workspace = true }
 slotmap = { workspace = true } 
+vello = { workspace = true }

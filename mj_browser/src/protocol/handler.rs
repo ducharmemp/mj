@@ -1,29 +1,37 @@
 use std::{fs::File, io::Read};
 
-use stakker::{ret, Ret, CX};
+use stakker::{actor_in_slab, call, ret, ActorOwnSlab, Ret, CX};
 use tracing::{event, instrument, Level};
 use url::Url;
 
-pub struct MjProtocolHandler;
+use super::{file::MjFileHandler, http::MjHttpHandler};
+
+pub struct MjProtocolHandler {
+    file_slab: ActorOwnSlab<MjFileHandler>,
+    http_slab: ActorOwnSlab<MjHttpHandler>,
+}
 
 impl MjProtocolHandler {
     #[instrument(skip(cx))]
     pub fn init(cx: CX![]) -> Option<Self> {
         event!(Level::INFO, "Starting protocol handler");
-        Some(Self {})
+        Some(Self {
+            file_slab: ActorOwnSlab::new(),
+            http_slab: ActorOwnSlab::new(),
+        })
     }
 
     pub fn fetch(&mut self, cx: CX![], url: Url, ret: Ret<String>) {
         match url.scheme() {
             "file" => {
-                let url = url
-                    .to_file_path()
-                    .expect("Could not convert url to file path");
-                let mut buf = String::new();
-                File::open(url).unwrap().read_to_string(&mut buf).unwrap();
-                ret!([ret], buf)
+                let actor = actor_in_slab!(self.file_slab, cx, MjFileHandler::init());
+                call!([actor], fetch(url, ret))
             }
-            _ => todo!(),
+            "http" | "https" => {
+                let actor = actor_in_slab!(self.http_slab, cx, MjHttpHandler::init());
+                call!([actor], fetch(url, ret))
+            }
+            _ => unimplemented!(),
         };
     }
 }

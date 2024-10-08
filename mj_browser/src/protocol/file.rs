@@ -1,41 +1,26 @@
-use std::path::PathBuf;
+use std::{fs::File, io::Read};
 
-use tokio::{fs::File, io::AsyncReadExt};
+use stakker::{ret, stop, Ret, CX};
 use tracing::{event, instrument, Level};
+use url::Url;
 
-pub struct MjFileProtocolHandler;
+pub struct MjFileHandler;
 
-pub struct MjFileProtocolHandlerState {
-    file: File,
-}
-
-impl MjFileProtocolHandler {
-    #[instrument(skip(self))]
-    async fn pre_start(
-        &self,
-        myself: ActorRef<Self::Msg>,
-        args: Self::Arguments,
-    ) -> Result<Self::State, ActorProcessingErr> {
-        event!(Level::INFO, "Starting file protocol handler");
-        let file = File::open(args).await?;
-        Ok(MjFileProtocolHandlerState { file })
+impl MjFileHandler {
+    #[instrument(skip(cx))]
+    pub fn init(cx: CX![]) -> Option<Self> {
+        event!(Level::INFO, "Starting protocol handler");
+        Some(Self {})
     }
 
-    async fn handle(
-        &self,
-        myself: ActorRef<Self::Msg>,
-        message: Self::Msg,
-        state: &mut Self::State,
-    ) -> Result<(), ActorProcessingErr> {
-        match message {
-            MjProtocolMessage::Read(reply) => {
-                let mut buf = String::new();
-                state.file.read_to_string(&mut buf).await;
-                reply.send(Box::new(buf))?;
-                myself.stop(None);
-            }
-            MjProtocolMessage::Write => todo!(),
-        }
-        Ok(())
+    pub fn fetch(&mut self, cx: CX![], url: Url, ret: Ret<String>) {
+        let url = url
+            .to_file_path()
+            .expect("Could not convert url to file path");
+        let mut buf = String::new();
+        File::open(url).unwrap().read_to_string(&mut buf).unwrap();
+        ret!([ret], buf);
+        stop!(cx);
     }
 }
+

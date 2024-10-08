@@ -1,8 +1,5 @@
 use crate::protocol::handler::MjProtocolHandler;
-use mj_dom::{
-    repr::{DomEntry, DomTree},
-    MjDomParser,
-};
+use mj_dom::{layout::LayoutTree, tree::DomTree, MjDomParser};
 use stakker::{actor, call, ret_nop, ret_some_to, ActorOwn, Share, CX};
 use taffy::{prelude::length, Display, Size, Style, TaffyTree};
 use tracing::{event, instrument, Level};
@@ -33,37 +30,7 @@ impl MjWebview {
         })
     }
 
-    pub fn compute_layout(&mut self, cx: CX![]) -> (taffy::NodeId, TaffyTree) {
-        let mut taffy = TaffyTree::new();
-        let container = taffy.new_leaf(Default::default()).unwrap();
-
-        let body = self.dom_tree.ro(&cx).body();
-        if body.is_none() {
-            dbg!("No body");
-            return (container, taffy);
-        }
-        let body = body.unwrap();
-        fn descent(dom: &DomTree, node: &DomEntry, builder: &mut TaffyTree) -> taffy::NodeId {
-            let mut mapped = vec![];
-            for child in dom.iter_children(node) {
-                mapped.push(descent(dom, child, builder));
-            }
-            builder
-                .new_with_children(
-                    Style {
-                        size: Size {
-                            width: length(100.0),
-                            height: length(100.0),
-                        },
-                        display: Display::Block,
-                        ..Default::default()
-                    },
-                    &mapped,
-                )
-                .expect("Could not create new node")
-        }
-
-        let container_id = descent(&self.dom_tree.ro(&cx), body, &mut taffy);
-        return (container_id, taffy);
+    pub fn compute_layout(&mut self, cx: CX![]) -> LayoutTree {
+        self.dom_tree.ro(cx).into()
     }
 }

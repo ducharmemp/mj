@@ -1,12 +1,15 @@
 use std::io::BufReader;
 
 use html5ever::{parse_document, tendril::TendrilSink};
-use repr::{DomEntry, DomTree};
 use stakker::{ret, Ret, Share, CX};
 use taffy::prelude::*;
 use tracing::{event, instrument, Level};
+use tree::DomTree;
 
-pub mod repr;
+pub mod document;
+pub mod layout;
+pub mod node;
+pub mod tree;
 
 pub struct MjDomParser {
     dom: Share<DomTree>,
