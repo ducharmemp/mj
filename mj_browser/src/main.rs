@@ -1,7 +1,7 @@
 use std::error::Error;
 
 use browser::MjBrowser;
-use tracing_subscriber::EnvFilter;
+use env_logger::Env;
 use winit::event_loop::EventLoop;
 
 mod browser;
@@ -12,11 +12,8 @@ mod webview;
 // Simple struct to hold the state of the renderer
 
 pub fn main() -> Result<(), Box<dyn Error>> {
-    // Setup a bunch of state:
-    tracing_subscriber::fmt()
-        .with_writer(std::io::stderr)
-        .with_env_filter(EnvFilter::from_env("MJ_LOG"))
-        .init();
+    let env = Env::new().filter("MJ_LOG").write_style("MJ_LOG_STYLE");
+    env_logger::init_from_env(env);
 
     let event_loop = EventLoop::new()?;
     let mut browser = MjBrowser::new()?;

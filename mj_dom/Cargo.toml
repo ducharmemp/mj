@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-html5ever = { workspace = true }
-stakker = { workspace = true }
-taffy = { workspace = true }
-tracing = { workspace = true }
-slotmap = { workspace = true } 
-vello = { workspace = true }
+html5ever.workspace = true
+stakker.workspace = true
+taffy.workspace = true
+hashbrown.workspace = true
+vello.workspace = true
+mj_utilities = { path = "../mj_utilities/" }

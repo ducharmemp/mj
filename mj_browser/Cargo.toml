@@ -7,10 +7,7 @@ license = "LGPL-3.0"
 [dependencies]
 html5ever = { workspace = true } 
 clap = { workspace = true } 
-slotmap = { workspace = true } 
 url = { workspace = true } 
-tracing = { workspace = true } 
-tracing-subscriber = { workspace = true } 
 vello = { workspace = true } 
 winit ={ workspace = true } 
 taffy = { workspace = true } 
@@ -19,3 +16,7 @@ pollster = { workspace = true }
 mj_dom = { path = "../mj_dom" }
 parley = "0.1.0"
 ureq = "2.10.1"
+stakker_mio = "0.2.5"
+stakker_log = "0.1.0"
+env_logger = "0.11.5"
+log = "0.4.22"

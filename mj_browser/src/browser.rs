@@ -1,10 +1,18 @@
-use std::{error::Error, num::NonZeroUsize, sync::Arc, time::Instant};
+use std::{
+    error::Error,
+    num::NonZeroUsize,
+    sync::Arc,
+    time::{Duration, Instant},
+};
 
-use stakker::{actor, query, ret_shutdown, ActorOwn, Stakker};
-use taffy::{AvailableSpace, TaffyTree};
+use stakker::{actor, ret_shutdown, ActorOwn, LogFilter, LogLevel, Stakker};
+use stakker_log::KvSingleLine;
+use stakker_mio::{
+    mio::{Events, Poll},
+    MioPoll,
+};
 use url::Url;
 use vello::{
-    kurbo::{Affine, RoundedRect, Stroke},
     peniko::Color,
     util::{RenderContext, RenderSurface},
     wgpu, AaConfig, Renderer, RendererOptions, Scene,
@@ -34,6 +42,7 @@ enum RenderState<'s> {
 pub struct MjBrowser<'b> {
     webview: ActorOwn<MjWebview>,
     stakker: Stakker,
+    miopoll: MioPoll,
     render_context: RenderContext,
     renderers: Vec<Option<Renderer>>,
     render_state: RenderState<'b>,
@@ -43,16 +52,30 @@ pub struct MjBrowser<'b> {
 impl<'b> MjBrowser<'b> {
     pub fn new() -> Result<Self, Box<dyn Error>> {
         let mut stakker = Stakker::new(Instant::now());
+        stakker.set_logger(LogFilter::all(LogLevel::all_levels()), |_core, line| {
+            let translated = match line.level {
+                LogLevel::Trace => log::Level::Trace,
+                LogLevel::Debug => log::Level::Debug,
+                LogLevel::Info => log::Level::Info,
+                LogLevel::Warn => log::Level::Warn,
+                LogLevel::Error => log::Level::Error,
+                LogLevel::Off => return,
+                LogLevel::Audit => log::Level::Trace,
+                LogLevel::Open => log::Level::Info,
+                LogLevel::Close => log::Level::Info,
+                _ => unreachable!(),
+            };
+            log::log!(target: line.target, translated, "{} {}", line.fmt, KvSingleLine::new(line.kvscan, " ", ""));
+        });
+        let miopoll = MioPoll::new(&mut stakker, Poll::new()?, Events::with_capacity(1024), 0)?;
         let webview = actor!(
             stakker,
-            MjWebview::init(
-                Url::parse("https://demo.borland.com/testsite/stadyn_largepagewithimages.html")
-                    .unwrap()
-            ),
+            MjWebview::init(Url::parse("https://example.com").unwrap()),
             ret_shutdown!(stakker)
         );
         Ok(Self {
             stakker,
+            miopoll,
             webview,
             render_context: RenderContext::new(),
             renderers: vec![],
@@ -64,6 +87,7 @@ impl<'b> MjBrowser<'b> {
 
 impl<'b> ApplicationHandler for MjBrowser<'b> {
     fn new_events(&mut self, event_loop: &ActiveEventLoop, cause: winit::event::StartCause) {
+        self.miopoll.poll(Duration::from_secs(0)).unwrap();
         self.stakker.run(Instant::now(), false);
     }
 
@@ -144,18 +168,12 @@ impl<'b> ApplicationHandler for MjBrowser<'b> {
             // This is where all the rendering happens
             WindowEvent::RedrawRequested => {
                 // Get the RenderSurface (surface + config)
-                dbg!("Redrawing");
                 self.scene.reset();
                 let surface = &render_state.surface;
 
                 // Get the window size
                 let width = surface.config.width;
                 let height = surface.config.height;
-                let mut layout = query!([self.webview, &mut self.stakker], compute_layout())
-                    .expect("Could not resolve DOM layout");
-
-                layout.set_content_area(width as f32, height as f32);
-                layout.draw(&mut self.scene);
 
                 // Get a handle to the device
                 let device_handle = &self.render_context.devices[surface.dev_id];

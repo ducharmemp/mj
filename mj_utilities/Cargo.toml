@@ -1,0 +1,10 @@
+[package]
+name = "mj_utilities"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+hashbrown.workspace = true
+stakker.workspace = true

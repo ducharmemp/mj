@@ -5,8 +5,6 @@ use vello::{
     Scene,
 };
 
-use crate::{node::DomEntry, tree::DomTree};
-
 pub struct LayoutTree {
     root: NodeId,
     inner: TaffyTree,

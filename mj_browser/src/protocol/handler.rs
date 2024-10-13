@@ -1,7 +1,4 @@
-use std::{fs::File, io::Read};
-
-use stakker::{actor_in_slab, call, ret, ActorOwnSlab, Ret, CX};
-use tracing::{event, instrument, Level};
+use stakker::{actor_in_slab, call, ActorOwnSlab, Ret, CX};
 use url::Url;
 
 use super::{file::MjFileHandler, http::MjHttpHandler};
@@ -12,9 +9,7 @@ pub struct MjProtocolHandler {
 }
 
 impl MjProtocolHandler {
-    #[instrument(skip(cx))]
     pub fn init(cx: CX![]) -> Option<Self> {
-        event!(Level::INFO, "Starting protocol handler");
         Some(Self {
             file_slab: ActorOwnSlab::new(),
             http_slab: ActorOwnSlab::new(),
