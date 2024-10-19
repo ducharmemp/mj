@@ -5,7 +5,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use stakker::{actor, ret_shutdown, ActorOwn, LogFilter, LogLevel, Stakker};
+use stakker::{actor, call, ret_shutdown, ActorOwn, LogFilter, LogLevel, Stakker};
 use stakker_log::KvSingleLine;
 use stakker_mio::{
     mio::{Events, Poll},
@@ -70,7 +70,7 @@ impl<'b> MjBrowser<'b> {
         let miopoll = MioPoll::new(&mut stakker, Poll::new()?, Events::with_capacity(1024), 0)?;
         let webview = actor!(
             stakker,
-            MjWebview::init(Url::parse("https://example.com").unwrap()),
+            MjWebview::init(Url::parse("https://www.example.com").unwrap()),
             ret_shutdown!(stakker)
         );
         Ok(Self {
@@ -162,12 +162,14 @@ impl<'b> ApplicationHandler for MjBrowser<'b> {
                     size.width,
                     size.height,
                 );
+                call!([self.webview], set_content_area(size.width, size.height));
                 render_state.window.request_redraw();
             }
 
             // This is where all the rendering happens
             WindowEvent::RedrawRequested => {
                 // Get the RenderSurface (surface + config)
+                call!([self.webview], composite());
                 self.scene.reset();
                 let surface = &render_state.surface;
 

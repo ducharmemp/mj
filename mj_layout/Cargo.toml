@@ -1,12 +1,13 @@
 [package]
-name = "mj_utilities"
+name = "mj_layout"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 publish.workspace = true
 
 [dependencies]
-hashbrown.workspace = true
+mj_dom.path = "../mj_dom/"
+mj_utilities.path = "../mj_utilities/"
 stakker.workspace = true
 
 [lints]

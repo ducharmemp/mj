@@ -1,7 +1,7 @@
 [workspace]
 members = [
         "mj_*/"
-, "mj_utilities"]
+, "mj_layout", "mj_utilities"]
 default-members =  ["mj_browser"]
 resolver = "2"
 
@@ -21,3 +21,7 @@ taffy = "0.5.2"
 stakker = { version = "0.2.11", features = ["logger", "inter-thread"]}
 pollster = "0.3.0"
 hashbrown = "0.15.0"
+
+[workspace.lints.clippy]
+cargo = 'deny'
+perf = 'deny'

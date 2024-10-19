@@ -7,12 +7,12 @@ use html5ever::{
     tendril::{StrTendril, TendrilSink},
     Attribute, ExpandedName, QualName,
 };
-use mj_utilities::{actor_in_map, actor_own_map::ActorOwnMap};
+use mj_utilities::{actor_in_map, actor_new_in_map, actor_own_map::ActorOwnMap};
 use nodes::{DomEntry, MemberKind};
 use parser::{MjDomParser, NodeId, ParseOperation};
 use stakker::{
-    actor, actor_in_slab, call, fwd_to, ret, ret_nop, Actor, ActorOwn, ActorOwnSlab, Cx, PipedLink,
-    PipedThread, Ret, Share, CX,
+    actor, actor_in_slab, call, fwd_to, ret, ret_do, ret_nop, Actor, ActorOwn, ActorOwnSlab, Cx,
+    PipedLink, PipedThread, Ret, Share, CX,
 };
 
 // pub mod layout;
@@ -50,12 +50,14 @@ impl MjDom {
     }
 
     pub fn parse_document(&mut self, cx: CX![], content: String) {
-        self.document = Some(actor_in_map!(
-            self.nodes,
-            cx,
-            0,
-            DomEntry::empty_of_kind(MemberKind::Document)
-        ));
+        let document = actor_new_in_map!(self.nodes, cx, 0);
+        let root = document.clone();
+        let initializer = document.clone();
+        call!(
+            [initializer],
+            DomEntry::empty_of_kind(0, root, MemberKind::Document)
+        );
+        self.document = document.into();
         self.parser.send(content);
     }
 
@@ -71,6 +73,7 @@ impl MjDom {
     }
 
     fn recv(&mut self, cx: CX![], message: ParseOperation) {
+        dbg!(self.nodes.len());
         match message {
             ParseOperation::GetTemplateContents { target, contents } => todo!(),
             ParseOperation::CreateElement {
@@ -83,10 +86,14 @@ impl MjDom {
                     self.nodes,
                     cx,
                     node,
-                    DomEntry::empty_of_kind(MemberKind::Element {
-                        name,
-                        attrs: HashMap::new()
-                    })
+                    DomEntry::empty_of_kind(
+                        node,
+                        self.document.clone().expect("Document must be present"),
+                        MemberKind::Element {
+                            name,
+                            attrs: HashMap::new()
+                        }
+                    )
                 );
             }
             ParseOperation::CreateComment { text, node } => {
@@ -94,10 +101,54 @@ impl MjDom {
                     self.nodes,
                     cx,
                     node,
-                    DomEntry::empty_of_kind(MemberKind::Comment { content: text })
+                    DomEntry::empty_of_kind(
+                        node,
+                        self.document.clone().expect("Document must be present"),
+                        MemberKind::Comment { content: text }
+                    )
                 );
             }
-            ParseOperation::AppendBeforeSibling { sibling, node } => todo!(),
+            ParseOperation::AppendBeforeSibling { sibling, node } => {
+                match node {
+                    parser::ParserNodeOrText::Node(node) => {
+                        let [sibling_actor, actor] = self.nodes.get_many_mut([&sibling, &node.id]);
+                        let sibling_actor =
+                            sibling_actor.expect("Could not find sibling element in DOM");
+                        let actor = actor.expect("Could not find element in DOM");
+                        let parent_resolver = sibling_actor.clone();
+                        let sibling_actor = sibling_actor.clone();
+                        let actor = actor.clone();
+                        call!(
+                            [parent_resolver],
+                            parent(ret_do!(move |parent: Option<Option<Actor<DomEntry>>>| {
+                                let parent = parent
+                                    .flatten()
+                                    .expect("Could not get parent of sibling node");
+                                call!([parent], insert_before(actor, sibling_actor))
+                            }))
+                        );
+                    }
+                    parser::ParserNodeOrText::Text(node_id, text) => {
+                        let actor = {
+                            actor_in_map!(
+                                self.nodes,
+                                cx,
+                                node_id,
+                                DomEntry::empty_of_kind(
+                                    node_id,
+                                    self.document.clone().expect("Document must be present"),
+                                    MemberKind::Text { contents: text }
+                                )
+                            )
+                        };
+                        let sibling_actor = self
+                            .nodes
+                            .get(&sibling)
+                            .expect("Could not find parent element in DOM");
+                        call!([sibling_actor], append(actor))
+                    }
+                };
+            }
             ParseOperation::AppendBasedOnParentNode {
                 element,
                 prev_element,
@@ -119,7 +170,11 @@ impl MjDom {
                                 self.nodes,
                                 cx,
                                 node_id,
-                                DomEntry::empty_of_kind(MemberKind::Text { contents: text })
+                                DomEntry::empty_of_kind(
+                                    node_id,
+                                    self.document.clone().expect("Document must be present"),
+                                    MemberKind::Text { contents: text }
+                                )
                             )
                         };
                         let parent_actor = self

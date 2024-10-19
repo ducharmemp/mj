@@ -10,3 +10,6 @@ taffy.workspace = true
 hashbrown.workspace = true
 vello.workspace = true
 mj_utilities = { path = "../mj_utilities/" }
+
+[lints]
+workspace = true
