@@ -1,7 +1,7 @@
 [workspace]
 members = [
         "mj_*/"
-]
+, "mj_layout", "mj_utilities"]
 default-members =  ["mj_browser"]
 resolver = "2"
 
@@ -14,12 +14,14 @@ publish = false
 [workspace.dependencies]
 html5ever = "0.27"
 clap = { version = "4.5.17", features = ["derive"] }
-slotmap = "1.0.7"
 url = "2.5"
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["std", "env-filter"] }
 vello = "0.2.1"
 winit = "0.30.5"
 taffy = "0.5.2"
-stakker = "0.2.11"
+stakker = { version = "0.2.11", features = ["logger", "inter-thread"]}
 pollster = "0.3.0"
+hashbrown = "0.15.0"
+
+[workspace.lints.clippy]
+cargo = 'deny'
+perf = 'deny'

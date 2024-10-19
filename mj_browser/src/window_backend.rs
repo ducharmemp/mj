@@ -2,7 +2,6 @@ use std::{num::NonZeroUsize, sync::Arc};
 
 use ractor::{async_trait, cast, Actor, ActorProcessingErr, ActorRef};
 use taffy::{AvailableSpace, TaffyTree};
-use tracing::{event, instrument, Level};
 use vello::{
     kurbo::{Affine, RoundedRect, Stroke},
     peniko::Color,
@@ -55,13 +54,11 @@ impl Actor for MjWindowBackend {
     type State = MjWindowBackendState<'static>;
     type Arguments = MjWindowBackendArgs;
 
-    #[instrument(skip(self))]
     async fn pre_start(
         &self,
         myself: ActorRef<Self::Msg>,
         args: Self::Arguments,
     ) -> Result<Self::State, ActorProcessingErr> {
-        event!(Level::INFO, "Starting window renderer");
         Ok(MjWindowBackendState {
             event_loop: args,
             render_context: RenderContext::new(),
@@ -71,7 +68,6 @@ impl Actor for MjWindowBackend {
         })
     }
 
-    #[instrument(skip(self, myself, message, state))]
     async fn handle(
         &self,
         myself: ActorRef<Self::Msg>,
@@ -84,7 +80,6 @@ impl Actor for MjWindowBackend {
                     RenderState::Active(state) if state.window.id() == window_id => state,
                     _ => return Ok(()),
                 };
-                event!(Level::INFO, "Drawing window");
                 // Get the RenderSurface (surface + config)
                 let surface = &render_state.surface;
 
