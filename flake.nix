@@ -32,17 +32,17 @@
           atk
           gtk3
           glib
-vulkan-headers
-vulkan-loader
-vulkan-validation-layers
-vulkan-tools
+          vulkan-headers
+          vulkan-loader
+          vulkan-validation-layers
+          vulkan-tools
         ];
       in
       with pkgs;
       {
         formatter = pkgs.nixpkgs-fmt;
         devShells.default = mkShell {
-          buildInputs = with toolchain; [ (withComponents [ "cargo" "clippy" "rust-src" "rustc" "rustfmt" ]) statix rust-analyzer-nightly ] ++ buildPackages;
+          buildInputs = with toolchain; [ (withComponents [ "cargo" "clippy" "rust-src" "rustc" "rustfmt" ]) statix rust-analyzer-nightly lldb ] ++ buildPackages;
           LD_LIBRARY_PATH = lib.makeLibraryPath buildPackages;
           RUST_BACKTRACE = 1;
         };

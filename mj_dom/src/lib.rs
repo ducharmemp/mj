@@ -1,6 +1,7 @@
 use std::{borrow::Cow, collections::HashMap, hash::Hash, io::BufReader};
 
 use dom_iterator::ForwardDomIterator;
+use ecow::EcoString;
 use html5ever::{
     interface::{ElementFlags, NodeOrText, QuirksMode, TreeSink},
     parse_document,
@@ -73,7 +74,6 @@ impl MjDom {
     }
 
     fn recv(&mut self, cx: CX![], message: ParseOperation) {
-        dbg!(self.nodes.len());
         match message {
             ParseOperation::GetTemplateContents { target, contents } => todo!(),
             ParseOperation::CreateElement {
@@ -104,7 +104,9 @@ impl MjDom {
                     DomEntry::empty_of_kind(
                         node,
                         self.document.clone().expect("Document must be present"),
-                        MemberKind::Comment { content: text }
+                        MemberKind::Comment {
+                            content: EcoString::from(text)
+                        }
                     )
                 );
             }
@@ -137,7 +139,9 @@ impl MjDom {
                                 DomEntry::empty_of_kind(
                                     node_id,
                                     self.document.clone().expect("Document must be present"),
-                                    MemberKind::Text { contents: text }
+                                    MemberKind::Text {
+                                        contents: EcoString::from(text)
+                                    }
                                 )
                             )
                         };
@@ -173,7 +177,9 @@ impl MjDom {
                                 DomEntry::empty_of_kind(
                                     node_id,
                                     self.document.clone().expect("Document must be present"),
-                                    MemberKind::Text { contents: text }
+                                    MemberKind::Text {
+                                        contents: EcoString::from(text)
+                                    }
                                 )
                             )
                         };

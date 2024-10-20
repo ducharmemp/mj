@@ -25,3 +25,6 @@ hashbrown = "0.15.0"
 [workspace.lints.clippy]
 cargo = 'deny'
 perf = 'deny'
+
+[profile.release]
+lto = 'fat'
