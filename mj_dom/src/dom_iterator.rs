@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 use mj_utilities::actor_iterator::ActorIterator;
 use stakker::{actor, call, fwd, ret, ret_do, ret_to, stop, Actor, Fwd, Ret, CX};
 
-use crate::nodes::DomEntry;
+use crate::nodes::dom_entry::DomEntry;
 
 pub struct ForwardDomIterator {
     current: Actor<DomEntry>,

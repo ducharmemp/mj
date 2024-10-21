@@ -49,7 +49,7 @@ pub struct MjBrowser<'b> {
     scene: Scene,
 }
 
-impl<'b> MjBrowser<'b> {
+impl MjBrowser<'_> {
     pub fn new() -> Result<Self, Box<dyn Error>> {
         let mut stakker = Stakker::new(Instant::now());
         stakker.set_logger(LogFilter::all(LogLevel::all_levels()), |_core, line| {
@@ -85,7 +85,7 @@ impl<'b> MjBrowser<'b> {
     }
 }
 
-impl<'b> ApplicationHandler for MjBrowser<'b> {
+impl ApplicationHandler for MjBrowser<'_> {
     fn new_events(&mut self, event_loop: &ActiveEventLoop, cause: winit::event::StartCause) {
         self.miopoll.poll(Duration::from_secs(0)).unwrap();
         self.stakker.run(Instant::now(), false);

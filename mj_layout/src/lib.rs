@@ -1,4 +1,4 @@
-use mj_dom::{dom_iterator::ForwardDomIterator, nodes::DomEntry, MjDom};
+use mj_dom::{dom_iterator::ForwardDomIterator, nodes::dom_entry::DomEntry, MjDom};
 use mj_utilities::actor_iterator::ActorIterator;
 use stakker::{call, ret_do, ret_nop, ret_some_do, ret_some_to, Actor, ActorOwn, CX};
 

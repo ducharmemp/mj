@@ -1,7 +1,8 @@
-use std::{borrow::Cow, collections::HashMap, hash::Hash, io::BufReader};
+use std::{borrow::Cow, hash::Hash, io::BufReader};
 
 use dom_iterator::ForwardDomIterator;
 use ecow::EcoString;
+use hashbrown::HashMap;
 use html5ever::{
     interface::{ElementFlags, NodeOrText, QuirksMode, TreeSink},
     parse_document,
@@ -9,11 +10,11 @@ use html5ever::{
     Attribute, ExpandedName, QualName,
 };
 use mj_utilities::{actor_in_map, actor_new_in_map, actor_own_map::ActorOwnMap};
-use nodes::{DomEntry, MemberKind};
+use nodes::dom_entry::{DomEntry, MemberKind};
 use parser::{MjDomParser, NodeId, ParseOperation};
 use stakker::{
-    actor, actor_in_slab, call, fwd_to, ret, ret_do, ret_nop, Actor, ActorOwn, ActorOwnSlab, Cx,
-    PipedLink, PipedThread, Ret, Share, CX,
+    actor, actor_in_slab, call, fwd_to, lazy, ret, ret_do, ret_nop, Actor, ActorOwn, ActorOwnSlab,
+    Cx, PipedLink, PipedThread, Ret, Share, CX,
 };
 
 // pub mod layout;
@@ -209,6 +210,12 @@ impl MjDom {
             ParseOperation::CreatePI { node, target, data } => todo!(),
             ParseOperation::Pop { node } => todo!(),
             ParseOperation::SetQuirksMode { mode } => todo!(),
+            ParseOperation::FinishedParsing => {
+                lazy!(
+                    [self.document.clone().expect("Expected a document"), cx],
+                    normalize()
+                )
+            }
         }
     }
 

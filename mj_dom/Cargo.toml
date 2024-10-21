@@ -11,6 +11,7 @@ hashbrown.workspace = true
 vello.workspace = true
 mj_utilities = { path = "../mj_utilities/" }
 ecow = "0.2.2"
+ordermap = "0.5.3"
 
 [lints]
 workspace = true

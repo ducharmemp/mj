@@ -17,9 +17,6 @@ use html5ever::{
     Attribute, ExpandedName, QualName,
 };
 use stakker::PipedLink;
-use vello::glyph::skrifa::attribute;
-
-use crate::nodes::MemberKind;
 
 pub(crate) type NodeId = usize;
 static NEXT_NODE_ID: AtomicUsize = AtomicUsize::new(0);
@@ -115,6 +112,8 @@ pub enum ParseOperation {
     SetQuirksMode {
         mode: String,
     },
+
+    FinishedParsing,
 }
 
 pub struct MjDomParser<'parser> {
@@ -196,6 +195,7 @@ impl<'parse_context, 'parser: 'parse_context> TreeSink for MjDomParser<'parser> 
     type Output = Self;
 
     fn finish(self) -> Self::Output {
+        self.link.send(ParseOperation::FinishedParsing);
         self
     }
 
